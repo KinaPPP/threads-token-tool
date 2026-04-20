@@ -2,8 +2,7 @@
 
 このツールは、ブラウザ拡張機能や外部アプリで Threads API を利用するために必要な **「長期 Access Token（60日間有効）」** と **「User ID」** を、ブラウザ上の操作だけで簡単に取得するためのヘルパーページです。
 
-🌐 **[トークン取得ツールを開く](https://[あなたのユーザー名].github.io/threads-token-tool/)**
-*(※利用する際は、上記のリンクをクリックしてください)*
+🌐 **[トークン取得ツールを開く](https://kinappp.github.io/threads-token-tool/)**
 
 ---
 
@@ -26,7 +25,10 @@
 3. Threads API の設定画面（左メニューの「Threads API」＞「設定」）を開き、以下の情報を確認・設定します。
    - **ThreadsアプリID (App ID)** をメモする。
    - **Threadsのapp secret (App Secret)** をメモする。
-   - **「有効なOAuthリダイレクトURI」** 等の必須入力欄に、**このツールのURL（ `https://[あなたのユーザー名].github.io/threads-token-tool/` ）をコピペして、Enterキーを押して確定**させ、「変更を保存」します。
+   - **「有効なOAuthリダイレクトURI」** 等の必須入力欄すべてに、以下のツールURLをコピペして、**Enterキーを押して確定**させ、「変更を保存」します。
+     ```text
+     [https://kinappp.github.io/threads-token-tool/](https://kinappp.github.io/threads-token-tool/)
+     ```
 
 ### トークンの取得手順
 1. 本ツールのページを開きます。
