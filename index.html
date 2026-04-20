@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Threads トークン取得ツール</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f0f2f5; color: #1c1e21; line-height: 1.6; padding: 20px; }
+    .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    h1 { font-size: 20px; text-align: center; border-bottom: 1px solid #ddd; padding-bottom: 15px; margin-top: 0; }
+    .warning-box { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 15px; border-radius: 8px; font-size: 14px; margin-bottom: 20px; }
+    .warning-box strong { color: #d32f2f; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
+    input[type="text"], input[type="password"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
+    button { width: 100%; background: #000; color: #fff; border: none; padding: 12px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+    button:hover { background: #333; }
+    .result-box { display: none; background: #e8f5e9; border: 1px solid #c8e6c9; padding: 20px; border-radius: 8px; margin-top: 20px; }
+    .result-item { margin-bottom: 15px; }
+    .result-item code { display: block; background: #fff; padding: 10px; border: 1px solid #ccc; border-radius: 4px; word-break: break-all; margin-top: 5px; font-size: 13px; }
+    #loading { display: none; text-align: center; font-weight: bold; color: #555; margin-top: 20px; }
+    .step-desc { font-size: 13px; color: #666; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🧵 Threads API トークン取得ツール</h1>
+  
+  <div class="warning-box">
+    <strong>⚠️ セキュリティとプライバシーに関する注意</strong><br>
+    このページは、あなたのブラウザ内（ローカル）でのみ動作します。入力された App Secret や取得したトークンは、<strong>外部のサーバーに送信・保存されることは一切ありません。</strong><br><br>
+    画面を閉じると取得したデータは完全に消去されます。必ず手動でコピーし、拡張機能の設定画面に貼り付けてください。
+  </div>
+
+  <div id="step1">
+    <p class="step-desc">Meta for Developersで発行した「App ID」と「App Secret」を入力して、連携を開始してください。</p>
+    <div class="form-group">
+      <label>App ID (クライアントID)</label>
+      <input type="text" id="app_id" placeholder="例: 821674424248166">
+    </div>
+    <div class="form-group">
+      <label>App Secret (クライアントシークレット)</label>
+      <input type="password" id="app_secret" placeholder="例: 97955ce1dca1dd5da...">
+    </div>
+    <button id="auth-btn">Threadsと連携してトークンを取得する</button>
+  </div>
+
+  <div id="loading">通信中... そのままお待ちください⏳</div>
+
+  <div id="result" class="result-box">
+    <h3 style="margin-top:0; color:#2e7d32;">🎉 取得成功！</h3>
+    <p style="font-size: 14px; color: #333;">以下の2つを拡張機能の「Threads」設定欄にコピペしてください。</p>
+    
+    <div class="result-item">
+      <label>長期 Access Token (60日間有効)</label>
+      <code id="out_token"></code>
+    </div>
+    
+    <div class="result-item">
+      <label>User ID</label>
+      <code id="out_uid"></code>
+    </div>
+    
+    <button onclick="window.location.href = window.location.pathname" style="background:#555; margin-top:10px;">最初からやり直す</button>
+  </div>
+</div>
+
+<script>
+  const redirectUri = window.location.href.split('?')[0]; // 現在のURL（クエリパラメータ抜き）
+
+  // ボタンクリック：Metaの認証画面へ飛ばす
+  document.getElementById('auth-btn').addEventListener('click', () => {
+    const appId = document.getElementById('app_id').value.trim();
+    const appSecret = document.getElementById('app_secret').value.trim();
+
+    if (!appId || !appSecret) {
+      alert("App ID と App Secret を両方入力してください。");
+      return;
+    }
+
+    // リダイレクト後に使うため、一時的にセッションストレージに保存（タブを閉じたら消える）
+    sessionStorage.setItem('th_app_id', appId);
+    sessionStorage.setItem('th_app_secret', appSecret);
+
+    // 認証URLを構築してリダイレクト
+    const authUrl = `https://threads.net/oauth/authorize?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=threads_basic,threads_content_publish`;
+    window.location.href = authUrl;
+  });
+
+  // ページ読み込み時：リダイレクトで戻ってきた（URLに ?code= がある）場合の処理
+  window.addEventListener('DOMContentLoaded', async () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    let code = urlParams.get('code');
+    
+    if (code) {
+      // '#' が末尾につくことがあるので除去
+      if (code.endsWith('#_')) code = code.replace('#_', '');
+
+      document.getElementById('step1').style.display = 'none';
+      document.getElementById('loading').style.display = 'block';
+
+      const appId = sessionStorage.getItem('th_app_id');
+      const appSecret = sessionStorage.getItem('th_app_secret');
+      
+      // セキュリティのため、ストレージから即座に削除
+      sessionStorage.removeItem('th_app_id');
+      sessionStorage.removeItem('th_app_secret');
+
+      if (!appId || !appSecret) {
+        alert("セッション情報が見つかりません。最初からやり直してください。");
+        window.location.href = redirectUri;
+        return;
+      }
+
+      try {
+        // ① 短期トークンを取得
+        const shortBody = new URLSearchParams();
+        shortBody.append('client_id', appId);
+        shortBody.append('client_secret', appSecret);
+        shortBody.append('grant_type', 'authorization_code');
+        shortBody.append('redirect_uri', redirectUri);
+        shortBody.append('code', code);
+
+        const shortRes = await fetch('https://graph.threads.net/oauth/access_token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: shortBody.toString()
+        });
+        const shortData = await shortRes.json();
+        
+        if (!shortRes.ok) throw new Error(shortData.error_message || "短期トークンの取得に失敗しました");
+        const shortToken = shortData.access_token;
+        const userId = shortData.user_id; // ここで User ID も手に入る
+
+        // ② 長期トークンに交換
+        const longRes = await fetch(`https://graph.threads.net/access_token?grant_type=th_exchange_token&client_secret=${appSecret}&access_token=${shortToken}`);
+        const longData = await longRes.json();
+
+        if (!longRes.ok) throw new Error(longData.error?.message || "長期トークンの取得に失敗しました");
+        const longToken = longData.access_token;
+
+        // 結果を表示
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('result').style.display = 'block';
+        document.getElementById('out_token').textContent = longToken;
+        document.getElementById('out_uid').textContent = userId;
+
+        // URLを綺麗にする（codeを見えなくする）
+        window.history.replaceState({}, document.title, redirectUri);
+
+      } catch (error) {
+        alert("エラーが発生しました: \n" + error.message);
+        window.location.href = redirectUri;
+      }
+    }
+  });
+</script>
+
+</body>
+</html>
