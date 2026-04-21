@@ -27,7 +27,7 @@
    - **Threadsのapp secret (App Secret)** をメモする。
    - **「有効なOAuthリダイレクトURI」** 等の必須入力欄すべてに、以下のツールURLをコピペして、**Enterキーを押して確定**させ、「変更を保存」します。
      ```text
-     [https://kinappp.github.io/threads-token-tool/](https://kinappp.github.io/threads-token-tool/)
+     https://kinappp.github.io/threads-token-tool/
      ```
 
 ### トークンの取得手順
