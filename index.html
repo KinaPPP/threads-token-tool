@@ -3,175 +3,192 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
   <title>Threads トークン取得ツール</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f0f2f5; color: #1c1e21; line-height: 1.6; padding: 20px; }
-    .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    h1 { font-size: 20px; text-align: center; border-bottom: 1px solid #ddd; padding-bottom: 15px; margin-top: 0; }
-    .warning-box { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 15px; border-radius: 8px; font-size: 14px; margin-bottom: 20px; }
-    .warning-box strong { color: #d32f2f; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f0f2f5; color: #1c1e21; line-height: 1.6; padding: 20px; }
+    .container { max-width: 680px; margin: 0 auto; background: #fff; padding: 28px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+    h1 { font-size: 21px; text-align: center; border-bottom: 1px solid #ddd; padding-bottom: 15px; margin-top: 0; }
+    h2 { font-size: 18px; margin: 0 0 10px; }
+    .notice { background: #fff3cd; border: 1px solid #ffe08a; padding: 13px; border-radius: 8px; font-size: 14px; margin-bottom: 18px; }
+    .notice strong { color: #a34023; }
+    .info { background: #eef4ff; border: 1px solid #bfd1f7; padding: 14px; border-radius: 8px; font-size: 14px; }
     .form-group { margin-bottom: 15px; }
-    label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
-    input[type="text"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
-    button { width: 100%; background: #000; color: #fff; border: none; padding: 12px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
-    button:hover { background: #333; }
-    .result-box { display: none; background: #e8f5e9; border: 1px solid #c8e6c9; padding: 20px; border-radius: 8px; margin-top: 20px; }
-    .result-item { margin-bottom: 15px; }
-    
-    .code-container { display: flex; gap: 8px; align-items: stretch; margin-top: 5px; }
-    .code-container code { flex: 1; display: block; background: #fff; padding: 10px; border: 1px solid #ccc; border-radius: 4px; word-break: break-all; font-size: 13px; margin: 0; }
-    .copy-btn { width: auto; background: #1976d2; padding: 0 15px; font-size: 13px; white-space: nowrap; }
-    .copy-btn:hover { background: #1565c0; }
-    .copy-btn.copied { background: #2e7d32; }
-
-    #loading { display: none; text-align: center; font-weight: bold; color: #555; margin-top: 20px; }
-    .step-desc { font-size: 13px; color: #666; margin-bottom: 20px; }
+    label { display: block; font-weight: bold; font-size: 14px; margin-bottom: 5px; }
+    input { width: 100%; padding: 11px; border: 1px solid #aaa; border-radius: 6px; font-size: 15px; }
+    button, .button { display: inline-block; background: #111; color: #fff; border: none; border-radius: 6px; padding: 11px 16px; text-align: center; cursor: pointer; font-size: 15px; font-weight: bold; text-decoration: none; }
+    button:hover, .button:hover { background: #333; }
+    button:disabled { opacity: .65; cursor: default; }
+    .primary { width: 100%; }
+    .secondary { background: #1769aa; }
+    .secondary:hover { background: #09538c; }
+    .outline { background: #fff; border: 1px solid #555; color: #222; }
+    .outline:hover { background: #eee; }
+    .result { display: none; margin-top: 20px; padding: 20px; background: #e8f5e9; border: 1px solid #8cbf9c; border-radius: 8px; }
+    .row { display: flex; align-items: stretch; gap: 8px; margin: 6px 0 17px; }
+    .row code { flex: 1; display: block; background: #fff; padding: 9px; border: 1px solid #ccc; border-radius: 5px; font-size: 12px; word-break: break-all; white-space: pre-wrap; }
+    .row button { flex: none; font-size: 13px; }
+    .muted { color: #555; font-size: 13px; }
+    .steps { padding-left: 22px; font-size: 14px; }
+    .steps li { margin-bottom: 10px; }
+    .error { display: none; background: #fff0f0; border: 1px solid #cc7777; color: #862222; padding: 13px; margin-top: 18px; border-radius: 8px; white-space: pre-wrap; }
+    #loading { display: none; text-align: center; padding: 20px; font-weight: bold; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .actions > * { flex: 1; }
+    @media (max-width: 520px) { .container { padding: 18px; } .row { flex-direction: column; } .actions { flex-direction: column; } }
   </style>
 </head>
 <body>
-
-<div class="container">
-  <h1>🧵 Threads API トークン取得ツール</h1>
-  
-  <div class="warning-box">
-    <strong>⚠️ セキュリティとプライバシーに関する注意</strong><br>
-    このページはローカルでのみ動作します。外部サーバーへの送信・保存は一切ありません。
-  </div>
-
-  <div id="step1">
-    <p class="step-desc">Meta for Developersで発行した「App ID」と「App Secret」を入力してください。</p>
-    <div class="form-group">
-      <label>App ID (クライアントID)</label>
-      <input type="text" id="app_id" placeholder="例: 821674424248166" autocomplete="off">
+  <main class="container">
+    <h1>🧵 Threads API トークン取得ツール</h1>
+    <div class="notice"><strong>セキュリティについて</strong><br>
+      App ID・App SecretはMetaの公式APIとの認証に使用します。このページにKINA管理の認証サーバーはありません。
+      認証コードやトークンを含むURL、開発者ツールの通信ログは公開しないでください。
+      この版では長期トークン交換だけ、お使いのPCのPowerShellで実行します。
     </div>
-    <div class="form-group">
-      <label>App Secret (クライアントシークレット)</label>
-      <input type="text" id="app_secret" placeholder="例: 97955ce1dca1dd5da..." style="-webkit-text-security: disc;" autocomplete="off">
-    </div>
-    <button type="button" id="auth-btn">Threadsと連携してトークンを取得する</button>
-  </div>
 
-  <div id="loading">通信中... そのままお待ちください⏳</div>
+    <section id="step1">
+      <p class="muted">Meta for Developersで取得した、ご自身のThreads App IDとApp Secretを入力してください。MetaのOAuthコールバックURLは従来のまま変更不要です。</p>
+      <div class="form-group"><label for="app_id">Threads App ID</label>
+        <input id="app_id" type="text" inputmode="numeric" placeholder="Threads App ID" autocomplete="off" spellcheck="false"></div>
+      <div class="form-group"><label for="app_secret">Threads App Secret</label>
+        <input id="app_secret" type="password" placeholder="Threads App Secret" autocomplete="off" spellcheck="false"></div>
+      <button id="auth-btn" type="button" class="primary">Threadsと連携して短期トークンを取得</button>
+      <p class="muted">要求権限：threads_basic / threads_content_publish / threads_profile_discovery</p>
+    </section>
 
-  <div id="result" class="result-box">
-    <h3 style="margin-top:0; color:#2e7d32;">🎉 取得成功！</h3>
-    <div class="result-item">
-      <label>長期 Access Token</label>
-      <div class="code-container">
-        <code id="out_token"></code>
-        <button type="button" class="copy-btn" onclick="copyToClipboard('out_token', this)">コピー</button>
-      </div>
-    </div>
-    <div class="result-item">
+    <div id="loading" role="status">Threadsから短期トークンを取得しています… ⏳</div>
+    <div id="error" class="error" role="alert"></div>
+
+    <section id="result" class="result" aria-live="polite">
+      <h2>✅ 短期トークンを取得しました</h2>
+      <p class="muted">ブラウザではMeta側のCORS制限により、長期トークン交換の結果を読み取れません。<strong>長期交換はローカルのPowerShellで行います。</strong>新たな外部認証サーバーは不要です。</p>
+      <label>短期 Access Token</label>
+      <div class="row"><code id="out_short_token" aria-label="短期トークン"></code>
+        <button type="button" class="secondary" id="copy-token">コピー</button></div>
       <label>User ID</label>
-      <div class="code-container">
-        <code id="out_uid"></code>
-        <button type="button" class="copy-btn" onclick="copyToClipboard('out_uid', this)">コピー</button>
+      <div class="row"><code id="out_uid"></code>
+        <button type="button" class="secondary" id="copy-uid">コピー</button></div>
+      <div class="info">
+        <strong>長期トークンへの交換（Windows）</strong>
+        <ol class="steps">
+          <li>この画面の短期トークンをコピーする。</li>
+          <li>同じリポジトリにある <code>threads-long-token.ps1</code> をダウンロードし、内容を確認してPowerShellから実行する。</li>
+          <li>求められたら、ご自身のApp Secretと短期トークンを貼り付ける。入力は非表示で、Meta公式APIにのみ送信される。</li>
+          <li>表示された長期トークンと、上記のUser IDをクロスポストまたはシンプルまるごとZIPに登録する。</li>
+        </ol>
+        <div class="actions"><a class="button secondary" href="./threads-long-token.ps1" download>PowerShell補助ツールを保存</a>
+          <button type="button" class="outline" id="copy-helper">補助ツールのコードをコピー</button></div>
+        <p class="muted">PowerShellの実行ポリシーにより.ps1が実行できない場合は、「補助ツールのコードをコピー」してPowerShellに貼り付けてください。コードを確認してから実行してください。</p>
       </div>
-    </div>
-    <button type="button" onclick="window.location.href = window.location.pathname" style="background:#555; margin-top:15px;">最初からやり直す</button>
-  </div>
-</div>
+      <button type="button" class="outline primary" id="restart" style="margin-top:15px">最初からやり直す</button>
+    </section>
+  </main>
 
 <script>
-  console.log("🚀 スクリプトが正常に読み込まれました！");
+'use strict';
+const redirectUri = new URL(window.location.pathname, window.location.origin).href;
+const byId = id => document.getElementById(id);
+const show = (id, visible = true) => { byId(id).style.display = visible ? 'block' : 'none'; };
 
-  const redirectUri = window.location.href.split('?')[0];
-
-  function copyToClipboard(elementId, btnElement) {
-    const textToCopy = document.getElementById(elementId).textContent;
-    navigator.clipboard.writeText(textToCopy).then(() => {
-      const originalText = btnElement.textContent;
-      btnElement.textContent = "コピー完了！✅";
-      btnElement.classList.add("copied");
-      setTimeout(() => {
-        btnElement.textContent = originalText;
-        btnElement.classList.remove("copied");
-      }, 2000);
-    }).catch(err => {
-      alert("コピーに失敗しました。手動でコピーしてください。");
-    });
+function showError(message) {
+  byId('error').textContent = message;
+  show('error');
+  show('loading', false);
+}
+async function copyText(value, button) {
+  try {
+    await navigator.clipboard.writeText(value);
+    const old = button.textContent;
+    button.textContent = 'コピーしました';
+    setTimeout(() => { button.textContent = old; }, 1700);
+  } catch {
+    showError('クリップボードへのコピーに失敗しました。表示内容を手動でコピーしてください。');
   }
+}
 
-  document.getElementById('auth-btn').addEventListener('click', (event) => {
-    event.preventDefault();
-    const appId = document.getElementById('app_id').value.trim();
-    const appSecret = document.getElementById('app_secret').value.trim();
-
-    if (!appId || !appSecret) {
-      alert("App ID と App Secret を両方入力してください。");
-      return;
-    }
-
-    sessionStorage.setItem('th_app_id', appId);
-    sessionStorage.setItem('th_app_secret', appSecret);
-
-    const authUrl = `https://threads.net/oauth/authorize?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=threads_basic,threads_content_publish,threads_profile_discovery`;
-    window.location.href = authUrl;
+byId('auth-btn').addEventListener('click', () => {
+  const appId = byId('app_id').value.trim();
+  const appSecret = byId('app_secret').value.trim();
+  if (!/^\d+$/.test(appId) || !appSecret) {
+    showError('Threads App ID（数字）とApp Secretを入力してください。');
+    return;
+  }
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  const state = Array.from(bytes, n => n.toString(16).padStart(2, '0')).join('');
+  sessionStorage.setItem('th_app_id', appId);
+  sessionStorage.setItem('th_app_secret', appSecret);
+  sessionStorage.setItem('th_oauth_state', state);
+  const params = new URLSearchParams({
+    client_id: appId,
+    redirect_uri: redirectUri,
+    response_type: 'code',
+    scope: 'threads_basic,threads_content_publish,threads_profile_discovery',
+    state
   });
+  window.location.assign('https://threads.net/oauth/authorize?' + params.toString());
+});
+byId('restart').addEventListener('click', () => window.location.assign(redirectUri));
+byId('copy-token').addEventListener('click', () => copyText(byId('out_short_token').textContent, byId('copy-token')));
+byId('copy-uid').addEventListener('click', () => copyText(byId('out_uid').textContent, byId('copy-uid')));
+byId('copy-helper').addEventListener('click', async () => {
+  try {
+    const response = await fetch('./threads-long-token.ps1', {cache: 'no-store'});
+    if (!response.ok) throw new Error();
+    await copyText(await response.text(), byId('copy-helper'));
+  } catch { showError('補助ツールが見つかりません。threads-long-token.ps1も同じGitHubリポジトリにアップロードしてください。'); }
+});
 
-  window.addEventListener('DOMContentLoaded', async () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    let code = urlParams.get('code');
-    
-    if (code) {
-      if (code.endsWith('#_')) code = code.replace('#_', '');
-
-      document.getElementById('step1').style.display = 'none';
-      document.getElementById('loading').style.display = 'block';
-
-      const appId = sessionStorage.getItem('th_app_id');
-      const appSecret = sessionStorage.getItem('th_app_secret');
-      
-      sessionStorage.removeItem('th_app_id');
-      sessionStorage.removeItem('th_app_secret');
-
-      if (!appId || !appSecret) {
-        alert("セッション情報が見つかりません。最初からやり直してください。");
-        window.location.href = redirectUri;
-        return;
-      }
-
-      try {
-        const shortBody = new URLSearchParams();
-        shortBody.append('client_id', appId);
-        shortBody.append('client_secret', appSecret);
-        shortBody.append('grant_type', 'authorization_code');
-        shortBody.append('redirect_uri', redirectUri);
-        shortBody.append('code', code);
-
-        const shortRes = await fetch('https://graph.threads.net/oauth/access_token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: shortBody.toString()
-        });
-        const shortData = await shortRes.json();
-        
-        if (!shortRes.ok) throw new Error(shortData.error_message || "短期トークン取得失敗");
-        const shortToken = shortData.access_token;
-        const userId = shortData.user_id;
-
-        const longRes = await fetch(`https://graph.threads.net/access_token?grant_type=th_exchange_token&client_secret=${appSecret}&access_token=${shortToken}`);
-        const longData = await longRes.json();
-
-        if (!longRes.ok) throw new Error(longData.error?.message || "長期トークン取得失敗");
-        const longToken = longData.access_token;
-
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('result').style.display = 'block';
-        document.getElementById('out_token').textContent = longToken;
-        document.getElementById('out_uid').textContent = userId;
-
-        window.history.replaceState({}, document.title, redirectUri);
-
-      } catch (error) {
-        console.error("❌ エラー発生:", error);
-        alert("エラーが発生しました: \n" + error.message);
-        window.location.href = redirectUri;
-      }
+window.addEventListener('DOMContentLoaded', async () => {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  const oauthError = params.get('error');
+  if (!code && !oauthError) return;
+  // リクエスト・エラーログ等へ認証コードを残さないよう、コールバック直後にURLを消す。
+  history.replaceState({}, document.title, redirectUri);
+  if (oauthError) { showError('Threads認証が完了しませんでした。最初からやり直してください。'); return; }
+  const appId = sessionStorage.getItem('th_app_id');
+  const appSecret = sessionStorage.getItem('th_app_secret');
+  const expectedState = sessionStorage.getItem('th_oauth_state');
+  sessionStorage.removeItem('th_app_id');
+  sessionStorage.removeItem('th_app_secret');
+  sessionStorage.removeItem('th_oauth_state');
+  if (!appId || !appSecret || !expectedState || params.get('state') !== expectedState) {
+    showError('セッション情報またはOAuth stateが一致しません。最初から認証をやり直してください。');
+    return;
+  }
+  show('step1', false);
+  show('loading');
+  try {
+    const body = new URLSearchParams({
+      client_id: appId,
+      client_secret: appSecret,
+      grant_type: 'authorization_code',
+      redirect_uri: redirectUri,
+      code
+    });
+    const response = await fetch('https://graph.threads.net/oauth/access_token', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: body.toString(),
+      cache: 'no-store'
+    });
+    const data = await response.json();
+    if (!response.ok || !data.access_token) {
+      throw new Error('Threadsが短期トークンを返しませんでした。Meta側のアプリ設定・有効期限を確認してください。');
     }
-  });
+    // ページ自身は長期交換へGETしない。現状、MetaがCORSヘッダーを返さないため。
+    byId('out_short_token').textContent = data.access_token;
+    byId('out_uid').textContent = String(data.user_id || '不明（Metaの応答を確認）');
+    show('loading', false);
+    show('result');
+  } catch (e) {
+    // エラーオブジェクト／通信URLには機密情報が含まれる場合があるため表示・ログ出力しない。
+    showError('短期トークンの取得に失敗しました。再度認証してください。\n通信が失敗する場合はChromeのNetworkで、機密情報を伏せてHTTPステータスのみ確認してください。');
+  }
+});
 </script>
-
 </body>
 </html>
