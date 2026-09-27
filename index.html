@@ -106,7 +106,7 @@
     sessionStorage.setItem('th_app_id', appId);
     sessionStorage.setItem('th_app_secret', appSecret);
 
-    const authUrl = `https://threads.net/oauth/authorize?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=threads_basic,threads_content_publish`;
+    const authUrl = `https://threads.net/oauth/authorize?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=threads_basic,threads_content_publish,threads_profile_discovery`;
     window.location.href = authUrl;
   });
 
