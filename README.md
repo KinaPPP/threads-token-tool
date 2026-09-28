@@ -56,11 +56,11 @@ Chrome + Meta Threads APIの実環境で、OAuth認証と短期→長期アク�
 
 テスト用の秘密情報、App Secret、実アクセストークンはリポジトリへ含めていません。
 
+v1.0.0公開前に、OAuth URL、state検証、短期→長期トークン交換、秘密情報をエラーへ露出させない処理、UIの主要状態など14項目の模擬テストを通過しています。
+
 ## ソースコード
 
-拡張機能本体は [`threads-token-extension/`](./threads-token-extension/) にあります。
-
-v1.0.0公開前に、OAuth URL、state検証、短期→長期トークン交換、秘密情報をエラーへ露出させない処理、UIの主要状態など14項目の模擬テストを通過しています。
+拡張機能のソースコードは配布ZIP内の `threads-token-extension` フォルダに含まれています。
 
 ## 旧Web版について
 
