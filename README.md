@@ -1,35 +1,69 @@
-# Threads トークン取得ツール：CORS修正版（サーバー不要）
+# Threadsトークン 取トーくん
 
-既存の `index.html` を置き換え、`threads-long-token.ps1` を同じディレクトリへ追加してください。OAuthリダイレクトURI（`https://kinappp.github.io/threads-token-tool/`）は従来どおりです。
+**Threads Token ShuTo-kun**  
+Chrome拡張機能 / v1.0.0
 
-## 今回の変更
+自分のMetaアプリを使って、Threadsの長期アクセストークンを取得するための小さなChrome拡張機能です。
 
-- `threads_profile_discovery` を認証スコープへ追加。
-- OAuth の `state` を生成・照合し、コールバック直後にURLの認証コードを消去。
-- 最初の短期トークン取得は従来と同様、GitHub Pages→Meta公式APIで処理。
-- Metaの `GET /access_token` がCORSで応答を読み取れないため、静的ページでは長期交換を試みません。成功した短期トークンとUser IDを表示したうえで、利用者の**ローカルPowerShell**による交換へ誘導します。
-- 取得失敗で画面を即時リセットする代わりに、秘匿情報を含まないエラー案内を表示。
-- 秘密情報やトークンをconsoleに出さない。コールバックコードは早期にURLから除去。
-- KINA管理サーバー／公開CORSプロキシは使用しません。
+旧Web版「Threads API トークン取得ツール」は、ブラウザのCORS制限により長期トークン交換を安全に完結できなかったため、Chrome拡張機能版へ移行しました。公開CORSプロキシやKINA管理の中継サーバーは使用しません。
 
-## 使い方
+## ダウンロード
 
-1. Metaダッシュボードで、今までと同じOAuthリダイレクトURIを維持します。App Secretをリセットした場合は**新しい**ものを使用します。
-2. 公開ページからApp ID/Secretを入力し、Threadsのアクセス許可画面で許可します。
-3. 戻ってきたページで「短期トークンをコピー」を押し、User IDを控えます。
-4. `threads-long-token.ps1` のソースを確認してから実行します。PowerShellでダウンロードしたファイルの実行が禁止されている場合は、ページの「補助ツールのコードをコピー」でコピーし、内容を確認してPowerShellに貼り付けます。
-5. 要求されたApp Secretと短期トークンを入力すると、Meta公式APIが長期トークンを返します。取得した長期トークンと3のUser IDをChrome拡張の設定に登録します。
+**[threads-token-extension-v1.0.0.zip をダウンロード](./threads-token-extension-v1.0.0.zip)**
 
-補助スクリプトは値をファイルへ記録しません。長期トークンをクリップボードにコピーするかは利用者が選択します。コピー後は他のアプリへの誤貼り付けに注意してください。
+ZIPを展開すると、親フォルダは常に `threads-token-extension` です。
 
-## なぜHTMLだけで自動交換できないのか
+## 主な特徴
 
-Metaの長期交換APIがGitHub Pagesに対して `Access-Control-Allow-Origin` を返さないため、HTTP 200でも `fetch()` のJSON本文をJavaScriptで読み取れません。`mode: 'no-cors'` は応答本文を隠すため解決策ではなく、公開CORSプロキシは秘密情報を第三者へ渡すため採用しません。**Chrome拡張のサービスワーカーからの交換処理**または安全なローカル補助処理なら、サーバーを運用せずに対応可能です。
+- Threads OAuth認証から長期アクセストークン取得までChrome拡張内で完結
+- App ID・App Secret・取得したトークンを拡張機能のストレージへ保存しない
+- 公開CORSプロキシを使わない
+- App SecretやトークンをConsoleへ出力しない
+- 長期トークン取得後はApp ID / App Secretを画面から消去
+- クロスポスト系ツールとシンプルまるごとZIPで使いやすい3権限を固定で取得
+- 長期トークンの自動更新は行わず、使用先アプリ側へ任せる
 
-この版は追加の拡張機能を必要としない暫定対応です。将来、CrosspostやSimple Marugoto ZIPのサービスワーカーにOAuthコード交換を組み込めば、ローカルのみで一連の操作を自動化できます。ただし、その場合も利用者自身のMetaアプリ設定が必要です。
+## インストール
 
-## セキュリティ上の注意
+1. 上のZIPをダウンロードして展開します。
+2. Chromeで `chrome://extensions` を開きます。
+3. 「デベロッパー モード」をONにします。
+4. 「パッケージ化されていない拡張機能を読み込む」を押します。
+5. 展開した `threads-token-extension` フォルダを選択します。
+6. 拡張機能アイコンから **Threadsトークン 取トーくん** を開きます。
 
-このページはKINA管理のサーバーへ情報を送信しませんが、認証のためMetaのThreads/Graph APIにはApp Secret・認証コード・トークンが送信されます。また `sessionStorage` は認証リダイレクトの間だけ利用します。「外部サーバーへの送信は一切ない」と表現するのは正確ではありません。
+## Meta for Developers の設定
 
-以前のコンソールログでApp Secretとアクセストークンが共有されている場合、**旧App Secretのリセットと旧トークンの失効**が必要です。新しく発行するだけでは旧トークンの失効は保証されません。
+取トーくんには、Chrome拡張専用のリダイレクトURLが表示されます。
+
+1. 「コールバックURLをリダイレクト」をコピーします。
+2. Meta for DevelopersのThreads API設定へ貼り付けます。
+3. 貼り付けると下に同じURLの候補が表示されるので、その候補をクリックして確定してから保存します。貼り付けただけでは未登録です。
+4. Threads App IDとThreads App Secretを取トーくんへ入力します。
+5. 「Threadsと連携してトークンを取得する」を押します。
+
+「コールバックURLをアンインストール」「コールバックURLを削除」は、個人利用・テスター利用では空欄の状態でも長期トークン取得まで実機確認しています。Meta側で入力を求められた場合はMetaの案内に従ってください。
+
+## 取得する権限
+
+- `threads_basic`
+- `threads_content_publish`
+- `threads_profile_discovery`
+
+## 実機確認
+
+Chrome + Meta Threads APIの実環境で、OAuth認証と短期→長期アクセストークン交換まで確認しています。
+
+テスト用の秘密情報、App Secret、実アクセストークンはリポジトリへ含めていません。
+
+## ソースコード
+
+拡張機能本体は [`threads-token-extension/`](./threads-token-extension/) にあります。
+
+v1.0.0公開前に、OAuth URL、state検証、短期→長期トークン交換、秘密情報をエラーへ露出させない処理、UIの主要状態など14項目の模擬テストを通過しています。
+
+## 旧Web版について
+
+旧URLは移転案内ページとして残しています。
+
+https://kinappp.github.io/threads-token-tool/
